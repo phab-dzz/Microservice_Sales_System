@@ -1,0 +1,117 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: payment-service
+          uri: http://payment-service:8081
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentCircuitBreaker
+                fallbackUri: forward:/fallback/payment
+
+        - id: inventory-service
+          uri: http://inventory-service:8082
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: inventoryCircuitBreaker
+                fallbackUri: forward:/fallback/inventory
+
+        - id: shipping-service
+          uri: http://shipping-service:8083
+          predicates:
+            - Path=/api/shipping/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: shippingCircuitBreaker
+                fallbackUri: forward:/fallback/shipping
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      inventoryCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      shippingCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+  timelimiter:
+    instances:
+      paymentCircuitBreaker:
+        timeoutDuration: 3s
+      inventoryCircuitBreaker:
+        timeoutDuration: 3s
+      shippingCircuitBreaker:
+        timeoutDuration: 3s
+
+  retry:
+    instances:
+      paymentRetry:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+      inventoryRetry:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+      shippingRetry:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+  ratelimiter:
+    instances:
+      paymentRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 3s
+      inventoryRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 3s
+      shippingRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 3s
