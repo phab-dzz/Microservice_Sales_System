@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   api-gateway:
-    build: ./api-gateway
+    build: 
+      context: ./api-gateway
     ports:
       - "8080:8080"
     depends_on:
@@ -13,7 +14,8 @@ services:
       - microservices-network
 
   payment-service:
-    build: ./payment-service
+    build:
+      context: ./payment-service
     ports:
       - "8081:8081"
     environment:
@@ -22,7 +24,8 @@ services:
       - microservices-network
 
   inventory-service:
-    build: ./inventory-service
+    build:
+      context: ./inventory-service
     ports:
       - "8082:8082"
     environment:
@@ -31,7 +34,8 @@ services:
       - microservices-network
 
   shipping-service:
-    build: ./shipping-service
+    build:
+      context: ./shipping-service
     ports:
       - "8083:8083"
     environment:
